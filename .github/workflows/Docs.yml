@@ -45,9 +45,9 @@ jobs:
         run: |
           julia --project=docs -e '
             using Documenter: DocMeta, doctest
-            using BubbleCCL
-            DocMeta.setdocmeta!(BubbleCCL, :DocTestSetup, :(using BubbleCCL); recursive=true)
-            doctest(BubbleCCL)'
+            using BlobCCL
+            DocMeta.setdocmeta!(BlobCCL, :DocTestSetup, :(using BlobCCL); recursive=true)
+            doctest(BlobCCL)'
       - name: Generate and deploy documentation
         run: julia --project=docs docs/make.jl
         env:

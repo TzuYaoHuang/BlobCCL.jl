@@ -1,7 +1,7 @@
-using BubbleCCL
+using BlobCCL
 using Documenter
 
-DocMeta.setdocmeta!(BubbleCCL, :DocTestSetup, :(using BubbleCCL); recursive = true)
+DocMeta.setdocmeta!(BlobCCL, :DocTestSetup, :(using BlobCCL); recursive = true)
 
 # Add titles of sections and overrides page titles
 const titles = Dict(
@@ -59,12 +59,12 @@ function list_pages()
 end
 
 makedocs(;
-    modules = [BubbleCCL],
+    modules = [BlobCCL],
     authors = "Tzu-Yao Huang <tzuyao.jason.huang@gmail.com>",
-    repo = "https://github.com/TzuYaoHuang/BubbleCCL.jl/blob/{commit}{path}#{line}",
-    sitename = "BubbleCCL.jl",
-    format = Documenter.HTML(; canonical = "https://TzuYaoHuang.github.io/BubbleCCL.jl"),
+    repo = "https://github.com/TzuYaoHuang/BlobCCL.jl/blob/{commit}{path}#{line}",
+    sitename = "BlobCCL.jl",
+    format = Documenter.HTML(; canonical = "https://TzuYaoHuang.github.io/BlobCCL.jl"),
     pages = list_pages(),
 )
 
-deploydocs(; repo = "github.com/TzuYaoHuang/BubbleCCL.jl")
+deploydocs(; repo = "github.com/TzuYaoHuang/BlobCCL.jl")

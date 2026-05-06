@@ -1,4 +1,4 @@
-name = "BubbleCCL"
+name = "BlobCCL"
 uuid = "e83f0818-3d4f-5e80-8d90-256cdf896bd4"
 authors = ["Tzu-Yao Huang <tzuyao.jason.huang@gmail.com>"]
 version = "0.1.0"

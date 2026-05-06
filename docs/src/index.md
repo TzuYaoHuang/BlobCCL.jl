@@ -1,8 +1,8 @@
 ```@meta
-CurrentModule = BubbleCCL
+CurrentModule = BlobCCL
 ```
 
-# BubbleCCL
+# BlobCCL
 
-Documentation for [BubbleCCL](https://github.com/TzuYaoHuang/BubbleCCL.jl).
+Documentation for [BlobCCL](https://github.com/TzuYaoHuang/BlobCCL.jl).
 
