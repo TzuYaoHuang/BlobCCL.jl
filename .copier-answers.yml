@@ -1,0 +1,12 @@
+# Changes here will be overwritten by Copier
+Authors: Tzu-Yao Huang <tzuyao.jason.huang@gmail.com>
+JuliaMinVersion: '1.10'
+License: MIT
+LicenseCopyrightHolders: Tzu-Yao Huang
+PackageName: BubbleCCL
+PackageOwner: TzuYaoHuang
+PackageUUID: e83f0818-3d4f-5e80-8d90-256cdf896bd4
+StrategyConfirmIncluded: false
+StrategyLevel: 1
+StrategyReviewExcluded: false
+_src_path: /Users/tzuyaohuang/.julia/packages/BestieTemplate/6QVd6
