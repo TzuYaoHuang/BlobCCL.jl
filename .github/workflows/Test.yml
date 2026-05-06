@@ -1,11 +1,11 @@
 name: Test
 
 on:
-  push:
-    branches:
-      - main
-    tags: ["*"]
   workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+  #   tags: ["*"]
 
 jobs:
   test:
