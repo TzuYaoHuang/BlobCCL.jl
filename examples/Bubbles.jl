@@ -1,9 +1,9 @@
 using BlobCCL
 
 
-function generate_diffuse_droplet!(f::AbstractArray{T,2}, center::Tuple{T,T}, radius::T, thickness::T; ε=T(0.01)) where T
+function generate_diffuse_droplet!(f::AbstractArray{T}, center, radius, thickness; ε=T(0.01)) where T
     for I in CartesianIndices(f)
-        dist = sqrt((I[1] - center[1])^2 + (I[2] - center[2])^2)
+        dist = √sum(abs2, I.I .- center .- 1.5) |> T
         
         # Tanh profile: α approaches 0 inside the droplet, 1 outside, intermediate at the interface
         alpha = 0.5 * (1.0 + tanh((dist - radius) / thickness))
@@ -33,7 +33,8 @@ generate_diffuse_droplet!(grid, (80.0, 15.0), 8.0, 2.0)
 # 3. Execute the algorithm
 # isblob evaluates α < 1.0 - eps, capturing the core and the diffuse interface.
 # blobval evaluates 1.0 - α, correctly accumulating fraction-weighted properties.
-labels, blobs = BlobCCL.LabelAnalyzeBlob(grid; blobtarget=0)
+@. grid = 1-grid
+labels, blobs = BlobCCL.LabelAnalyzeBlob(grid; blobtarget=1)
 
 # 4. Output validation
 println("Domain Size: ", Ng)
@@ -54,6 +55,41 @@ for b in blobs
     println("  Computed Volume:   $(round(b.volume, digits=4))")
     println("  Analytical Volume: $(round(analytical_vol, digits=4))")
     println("  Computed Centroid: [$(round(b.centroid[1], digits=4)), $(round(b.centroid[2], digits=4))]")
+    println("  Expected Centroid: $expected_center")
+    println("  Error in Volume:   $(round(abs(b.volume - analytical_vol)/analytical_vol * 100, digits=4))%")
+    println("---")
+end
+
+Ng = (40, 40, 40)
+grid = ones(Float64, Ng)
+
+# 2. Inject 3D droplets
+# Droplet 1: Center (15, 15, 15), Radius 6.0, Interface thickness 1.0
+generate_diffuse_droplet!(grid, (15.0, 15.0, 15.0), 6.0, 1.0)
+
+# Droplet 2: Center (28, 28, 25), Radius 4.5, Interface thickness 0.8
+generate_diffuse_droplet!(grid, (28.0, 28.0, 25.0), 4.5, 0.8)
+
+# 3. Execute algorithm
+labels, blobs = BlobCCL.LabelAnalyzeBlob(grid; blobtarget=0)
+
+# 4. Output validation
+println("Domain Size: ", Ng)
+println("Identified $(length(blobs)) distinct 3D droplets.\n")
+
+for b in blobs
+    if b.label == 1
+        analytical_vol = (4/3) * pi * 6.0^3
+        expected_center = [15.0, 15.0, 15.0]
+    else
+        analytical_vol = (4/3) * pi * 4.5^3
+        expected_center = [28.0, 28.0, 25.0]
+    end
+
+    println("Droplet $(b.label):")
+    println("  Computed Volume:   $(round(b.volume, digits=4))")
+    println("  Analytical Volume: $(round(analytical_vol, digits=4))")
+    println("  Computed Centroid: [$(round(b.centroid[1], digits=4)), $(round(b.centroid[2], digits=4)), $(round(b.centroid[3], digits=4))]")
     println("  Expected Centroid: $expected_center")
     println("  Error in Volume:   $(round(abs(b.volume - analytical_vol)/analytical_vol * 100, digits=4))%")
     println("---")
