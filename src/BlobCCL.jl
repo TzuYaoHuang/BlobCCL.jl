@@ -18,13 +18,13 @@ export BlobRadius
 # Assuming these are available in your environment.
 import WaterLily: loc, inside, δ
 
-function LabelAnalyzeBlob(f::AbstractArray{T,D}; blobtarget=0, threshold=T(1e-4)) where {T,D}
+function LabelAnalyzeBlob(f::AbstractArray{T,D};blobtarget=0,perdir=(),threshold=T(1e-4)) where {T,D}
     Ng = size(f)
     labels = zeros(Int, Ng)
     current_label = 0
 
     Blobs = Vector{BlobData{T,D}}()
-    queue = Vector{CartesianIndex{D}}(undef, prod(Ng))
+    queue = Vector{CartesianIndex{D}}(undef, prod(Ng.-2)÷2)
 
     isblob(α) = abs(α - blobtarget) < 1 - threshold
     blobval(α) = abs((1 - blobtarget) - α)
@@ -50,12 +50,29 @@ function LabelAnalyzeBlob(f::AbstractArray{T,D}; blobtarget=0, threshold=T(1e-4)
                 vol += val
                 centroid += loc(0, curr) * val
 
-                # Dimensionally generic neighbor traversal
                 for i in 1:D
                     for s in (-1, 1)
-                        n = curr + s*δ(i, curr)
+                        idx = curr[i] + s
+                        valid = true
                         
-                        n ∉ domain && continue
+                        # Handle periodicity using `in`
+                        if idx < 2
+                            if i in perdir
+                                idx = Ng[i] - 1 
+                            else
+                                valid = false   
+                            end
+                        elseif idx >= Ng[i]
+                            if i in perdir
+                                idx = 2         
+                            else
+                                valid = false   
+                            end
+                        end
+                        
+                        !valid && continue
+                        
+                        n = CartesianIndex(ntuple(dim -> dim == i ? idx : curr[dim], D))
                         
                         if isblob(f[n]) && labels[n] == 0
                             labels[n] = current_label
@@ -65,6 +82,7 @@ function LabelAnalyzeBlob(f::AbstractArray{T,D}; blobtarget=0, threshold=T(1e-4)
                     end
                 end
             end
+            
             push!(Blobs, BlobData(current_label, vol, centroid / vol))
         end
     end
