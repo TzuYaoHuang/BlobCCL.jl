@@ -8,6 +8,8 @@ struct BlobData{T,D}
     centroid::SVector{D,T}
 end
 
+export BlobData
+
 BlobRadius(a::BlobData{T,2}) where {T} = sqrt(a.volume/π) |> T
 BlobRadius(a::BlobData{T,3}) where {T} = cbrt(3a.volume/4π) |> T
 
@@ -16,7 +18,7 @@ export BlobRadius
 # Assuming these are available in your environment.
 import WaterLily: loc, inside, δ
 
-function LabelAnalyzeBlob(f::AbstractArray{T,D}; blobtarget=0) where {T,D}
+function LabelAnalyzeBlob(f::AbstractArray{T,D}; blobtarget=0, threshold=T(1e-4)) where {T,D}
     Ng = size(f)
     labels = zeros(Int, Ng)
     current_label = 0
@@ -24,7 +26,7 @@ function LabelAnalyzeBlob(f::AbstractArray{T,D}; blobtarget=0) where {T,D}
     Blobs = Vector{BlobData{T,D}}()
     queue = Vector{CartesianIndex{D}}(undef, prod(Ng))
 
-    isblob(α) = abs(α - blobtarget) < 1 - 100eps(T)
+    isblob(α) = abs(α - blobtarget) < 1 - threshold
     blobval(α) = abs((1 - blobtarget) - α)
     
     domain = inside(f)
