@@ -5,6 +5,7 @@ BlobCCL = "e83f0818-3d4f-5e80-8d90-256cdf896bd4"
 
 [compat]
 Documenter = "1"
+LiveServer = "1.5.0"
 
 [sources]
 BlobCCL = {path = ".."}
