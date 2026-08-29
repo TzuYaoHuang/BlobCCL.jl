@@ -10,3 +10,5 @@ BlobCCL = {path = ".."}
 
 [compat]
 TestItems = "1.0.0"
+TOML = "1.0.3"
+TestItemRunner = "1.1.5"
