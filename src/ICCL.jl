@@ -1,5 +1,17 @@
 import WaterLily: loc, inside, δ
 
+# Central-difference gradient in dimension d at cell I.
+# Periodic wrap if d ∈ perdir; mirror (Neumann) otherwise.
+function _grad(f::AbstractArray{T,D}, I::CartesianIndex{D}, d::Int, blobtarget, Ng, perdir) where {T,D}
+    ip = I[d] + 1
+    im = I[d] - 1
+    if ip >= Ng[d]; ip = (d ∈ perdir) ? 2        : I[d]; end
+    if im <  2;     im = (d ∈ perdir) ? Ng[d] - 1 : I[d]; end
+    Ip = CartesianIndex(ntuple(j -> j == d ? ip : I[j], Val(D)))
+    Im = CartesianIndex(ntuple(j -> j == d ? im : I[j], Val(D)))
+    @inbounds (f[Ip] - f[Im])*(0.5-blobtarget)
+end
+
 function LabelAnalyzeBlob(f::AbstractArray{T,D};blobtarget=0,perdir=(),threshold=T(1e-4)) where {T,D}
     Ng = size(f)
     labels = zeros(Int, Ng)
@@ -10,7 +22,7 @@ function LabelAnalyzeBlob(f::AbstractArray{T,D};blobtarget=0,perdir=(),threshold
 
     isblob(α) = abs(α - blobtarget) < 1 - threshold
     blobval(α) = abs((1 - blobtarget) - α)
-    
+
     domain = inside(f)
 
     @inbounds for I ∈ domain
@@ -36,27 +48,32 @@ function LabelAnalyzeBlob(f::AbstractArray{T,D};blobtarget=0,perdir=(),threshold
                     for s in (-1, 1)
                         idx = curr[i] + s
                         valid = true
-                        
-                        # Handle periodicity using `in`
+
+                        # Handle periodicity
                         if idx < 2
                             if i in perdir
-                                idx = Ng[i] - 1 
+                                idx = Ng[i] - 1
                             else
-                                valid = false   
+                                valid = false
                             end
                         elseif idx >= Ng[i]
                             if i in perdir
-                                idx = 2         
+                                idx = 2
                             else
-                                valid = false   
+                                valid = false
                             end
                         end
-                        
+
                         !valid && continue
-                        
-                        n = CartesianIndex(ntuple(dim -> dim == i ? idx : curr[dim], D))
-                        
+
+                        n = CartesianIndex(ntuple(dim -> dim == i ? idx : curr[dim], Val(D)))
+
                         if isblob(f[n]) && labels[n] == 0
+                            # Guarding if statement:
+                            # Normals diverge in the step direction → separate blobs
+                            s * _grad(f, curr, i, blobtarget, Ng, perdir) > 0 &&
+                            s * _grad(f, n,    i, blobtarget, Ng, perdir) < 0 && continue
+
                             labels[n] = current_label
                             tail += 1
                             queue[tail] = n
@@ -64,7 +81,7 @@ function LabelAnalyzeBlob(f::AbstractArray{T,D};blobtarget=0,perdir=(),threshold
                     end
                 end
             end
-            
+
             push!(Blobs, BlobData(current_label, vol, centroid / vol))
         end
     end
