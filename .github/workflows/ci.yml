@@ -1,0 +1,76 @@
+name: CI
+on:
+  workflow_dispatch:
+  # pull_request:
+  #   paths:
+  #     - '.github/workflows/ci.yml'
+  #     - 'src/**'
+  #     - 'test/**'
+  #     - 'Project.toml'
+  # push:
+  #   branches:
+  #     - main
+  #   tags: '*'
+  #   paths:
+  #     - '.github/workflows/ci.yml'
+  #     - 'src/**'
+  #     - 'test/**'
+  #     - 'Project.toml'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ github.event_name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - 'lts'
+          - '1'
+        os:
+          - ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.version }}
+          arch: x64
+      - uses: julia-actions/cache@v2
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-runtest@v1
+      - uses: julia-actions/julia-processcoverage@v1
+      - uses: codecov/codecov-action@v4
+        with:
+          file: lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1'
+      - uses: julia-actions/cache@v2
+      - name: Instantiate environment with development version of the package
+        run: |
+          julia --project=docs -e '
+            using Pkg
+            Pkg.develop(PackageSpec(path=pwd()))
+            Pkg.instantiate()'
+      - name: Run doctest
+        run: |
+          julia --project=docs -e '
+            using Documenter: DocMeta, doctest
+            using BlobCCL
+            DocMeta.setdocmeta!(BlobCCL, :DocTestSetup, :(using BlobCCL); recursive=true)
+            doctest(BlobCCL)'
+      - name: Generate and deploy documentation
+        run: julia --project=docs docs/make.jl
+        env:
+          JULIA_PKG_SERVER: ""
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
+          GKSwstype: "100"
